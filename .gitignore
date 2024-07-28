@@ -1,0 +1,11 @@
+bin/
+etc/
+include/
+lib/
+share/
+audio/
+.vscode
+__pycache__/
+env
+.env
+secrets.toml
