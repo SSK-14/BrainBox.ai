@@ -11,5 +11,5 @@ def initialise_tavily():
         st.stop()
     st.session_state.tavily_client = TavilyClient(api_key=tavily_api_key)
 
-def ai_search(query):
-    return st.session_state.tavily_client.search(query, search_depth="advanced", include_images=True)
+def ai_search(query, images=False, num_results=4):
+    return st.session_state.tavily_client.search(query, search_depth="advanced", include_images=images, max_results=num_results)

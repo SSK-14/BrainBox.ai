@@ -5,8 +5,8 @@ def search_query_prompt(user_query):
     return [
         {
             "role": "system",  
-            "content": f"Role: Create search query based on user question to write a blog, todays date: {current_date}\n"
-                    f"Task: Give a detailed search query which will be used to search internet to get information for writing the blog.\n"
+            "content": f"Role: Create search query based on user question to research, todays date: {current_date}\n"
+                    f"Task: Give a detailed search query which will be used to search internet to get information.\n"
                     f"Rule: Only return the query, Do not answer the question.\n"
         },
         { 
@@ -16,20 +16,52 @@ def search_query_prompt(user_query):
         }
     ]
 
+def arxiv_search_prompt(search_query):
+    system_prompt = f"""Task: Given a search query, create the appropriate arXiv API endpoint with the correct parameters in the query string.
+    Example:
+    Search query: Can you find papers on machine learning for image processing published after 2021?
+    Response: "http://export.arxiv.org/api/query?search_query=machine+learning+for+image+processing+published+after+2021"
+    Search query: Are there any recent studies on the impact of climate change on ocean currents?
+    Response: "http://export.arxiv.org/api/query?search_query=recent+studies+on+impact+of+climate+change+on+ocean+currents"
+    """
+    user_prompt = f"""Search query: {search_query}
+    Response:"""
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
 
-def search_rag_prompt(user_query, search_results):
-    current_date = time.strftime("%Y-%m-%d")
-    system_prompt = f"""You are a WizSearch.AI an search expert that helps answering question, todays date: {current_date}, 
-    utilize the search information to their fullest potential to provide additional information and assistance in your response.
+def arxiv_rag_prompt(user_query, search_results):
+    system_prompt = f"""You are a ReSearchr.AI an research expert that helps answering question.
     SEARCH INFORMATION is below:
     ---------------------
-    {json.dumps(search_results)}
+    {search_results}
     ---------------------
-    RULES:
-    1. Only Answer the USER QUESTION using the INFORMATION.
-    2. Include source link/info in the answer.
-    3. Respond in markdown format."""
-    user_prompt = f"User question: ```{user_query}``` .\nAnswer: "
+    Rules: Only answer the user question, based only on SEARCH INFORMATION.
+    Response should include:
+    # <title based on user query>
+    ## Summary: <overall summary of papers>
+    ## Key points: <key points observed>
+    """
+    user_prompt = f"User question: ```{user_query}``` .\nAnswer in markdown: "
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
+def search_rag_prompt(user_query, search_results):
+    system_prompt = f"""You are a ReSearchr.AI an search expert that helps answering question.
+    SEARCH INFORMATION is below:
+    ---------------------
+    {search_results}
+    ---------------------
+    Rules: Only answer the user question, based only on SEARCH INFORMATION.
+    Response should include:
+    # <title based on user query>
+    ## Summary: <overall summary of papers>
+    ## Key points: <key points observed>
+    """
+    user_prompt = f"User question: ```{user_query}``` .\nAnswer in markdown: "
     return [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
