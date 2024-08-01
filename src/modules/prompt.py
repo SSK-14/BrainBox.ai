@@ -32,7 +32,7 @@ def arxiv_search_prompt(search_query):
     ]
 
 def arxiv_rag_prompt(user_query, search_results):
-    system_prompt = f"""You are a ReSearchr.AI an research expert that helps answering question.
+    system_prompt = f"""You are a BrainBox.AI an research expert that helps answering question.
     SEARCH INFORMATION is below:
     ---------------------
     {search_results}
@@ -50,7 +50,7 @@ def arxiv_rag_prompt(user_query, search_results):
     ]
 
 def search_rag_prompt(user_query, search_results):
-    system_prompt = f"""You are a ReSearchr.AI an search expert that helps answering question.
+    system_prompt = f"""You are a BrainBox.AI an search expert that helps answering question.
     SEARCH INFORMATION is below:
     ---------------------
     {search_results}
@@ -66,3 +66,55 @@ def search_rag_prompt(user_query, search_results):
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
     ]
+
+def followup_query_prompt(query):    
+    return [
+        {
+            "role": "system", 
+            "content": """You are a BrainBox.AI an search expert that helps answering question. 
+            Role: Follow-up Question Creator.
+            TASK: Create two follow-up question's user can potentially ask based on the previous query.
+            Give the response in ARRAY format:
+            EXAMPLE:
+            User Query: "What is the capital of France?"
+            Response: ["What is the population of Paris?", "Place to visit in Paris?"]
+            If User Query is not a proper question or no follow-up question cna be generate then
+            Response: []
+            """
+        },
+        {
+            "role": "user", 
+            "content": f"User query: {query}\n"
+            f"Response in ARRAY format:"
+        } 
+    ]
+
+
+def rag_prompt(history=None, context=None):
+    system_message = {
+        "role": "system",
+        "content": f"""You are a BrainBox.AI, a Q/A expert that helps answer questions.
+        CONTEXT is below:
+        ---------------------
+        {context}
+        ---------------------
+        RULES:
+        1. Only answer the USER QUESTION.
+        2. Do not hallucinate only use CONTEXT.
+        3. Respond in markdown format."""
+    }
+    
+    prompt = [system_message]
+    if history:
+        for dict_message in history:
+            if dict_message["role"] == "user":
+                prompt.append({
+                    "role": "user",
+                    "content": dict_message["content"]
+                })
+            else:
+                prompt.append({
+                    "role": "assistant",
+                    "content": dict_message["content"]
+                })
+    return prompt

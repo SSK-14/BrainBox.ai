@@ -20,7 +20,7 @@ def initialise_model():
         base_url="https://api.ai71.ai/v1/",
     )
 
-def llm_generate(prompt):
+async def llm_generate(prompt):
     completion = st.session_state.llm.chat.completions.create(
         model=model_options[st.session_state.model_name] or "tiiuae/falcon-180b-chat", 
         messages=prompt

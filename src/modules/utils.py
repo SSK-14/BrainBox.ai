@@ -9,7 +9,11 @@ def init_session_state():
         "stream_response": None,
         "search_results": None,
         "question": None,
-        "deep_dive": False
+        "deep_dive": False,
+        "title": None,
+        "chat_ids": [],
+        "messages": [{"role": "assistant", "content": "Hi. I'm BrainBox.AI your super-smart AI assistant. Ask me anything you are looking for from your studies 🪄."}],
+        "followup_query": []
     }
     for key, value in state_defaults.items():
         if key not in st.session_state:

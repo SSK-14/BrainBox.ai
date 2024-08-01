@@ -2,18 +2,17 @@ import asyncio
 import streamlit as st
 from src.modules.model import initialise_model, llm_stream, llm_generate
 from src.modules.search import initialise_tavily
-from src.modules.utils import init_session_state, fetch_arxiv_results
+from src.modules.utils import fetch_arxiv_results
 from src.modules.prompt import search_query_prompt, search_rag_prompt, arxiv_search_prompt, arxiv_rag_prompt
 from src.modules.search import ai_search
 from src.components.sidebar import side_info
 from src.components.ui import example_questions, display_arxiv_results, display_search_result
+from src.database.sql_db import insert_study_data
+from src.database.vector_db import ingest_knowledge
 
 async def main():
-    st.title("📚 :blue-background[BrainBox]:blue[.ai]")
-    init_session_state()
+    st.title("📚 :blue-background[Researcher]:blue[.AI]")
     side_info()
-    initialise_model()
-    initialise_tavily()
 
     if st.session_state.question is None:
         search_type = st.radio("Search Type", ["Internet search", "ArXiv search"], horizontal=True)
@@ -73,6 +72,34 @@ async def main():
         with st.container(height=400, border=True):
             st.write(st.session_state.stream_response)
 
+    if st.session_state.stream_response and not st.session_state.title:      
+        title = st.text_input("Enter title for study ✍🏻", placeholder="Type here...")
+        if st.button("Save to BrainBox"):
+            if title.strip() == "":
+                st.toast("Title cannot be empty.")
+            else:
+                st.session_state.title = title
+                st.rerun()
+
+    if st.session_state.title:
+        with st.spinner("Saving study to BrainBox..."):
+            if st.session_state.search_type == "Internet search":
+                results = [ result["url"] for result in st.session_state.search_results["results"] ]
+            else:
+                results = [ result["Link"] for result in st.session_state.search_results ]
+            id = insert_study_data({"title": st.session_state.title, "results": results, "summary": st.session_state.stream_response, "type": st.session_state.search_type})
+            st.toast(f"Study saved successfully with ID: {id}")
+            ingest_knowledge(id, results, type)
+            st.toast("Add to knowledge successfully.")
+            st.balloons()
+        
+        if st.button("🔍 New Search"):
+            st.session_state.search_results = None
+            st.session_state.stream_response = None
+            st.session_state.question = None
+            st.session_state.title = None
+            st.session_state.deep_dive = False
+            st.rerun()
 
 if __name__ == "__main__":
     st.set_page_config(page_title="AI.Researcher", page_icon="✨", layout="wide")

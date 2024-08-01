@@ -14,6 +14,12 @@ def example_questions():
         st.session_state.question = questions[1]
         st.rerun()
 
+def display_chat_messages(messages):
+    icons = {"assistant": "🧠", "user": "👤"}
+    for message in messages:
+        with st.chat_message(message["role"], avatar=icons[message["role"]]):
+            st.markdown(message["content"])
+
 def display_search_result(search_results):
     with st.expander("Search Results", expanded=False):
         if search_results["results"]:
