@@ -2,6 +2,4 @@
 fastReruns = true
 [theme]
 base="dark"
-primaryColor="#6a89a5"
-backgroundColor="#002033"
-secondaryBackgroundColor="#0e1117"
+primaryColor="#60b4ff"

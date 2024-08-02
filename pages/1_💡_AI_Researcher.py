@@ -2,7 +2,7 @@ import asyncio
 import streamlit as st
 from src.modules.model import initialise_model, llm_stream, llm_generate
 from src.modules.search import initialise_tavily
-from src.modules.utils import fetch_arxiv_results
+from src.modules.utils import fetch_arxiv_results, init_session_state
 from src.modules.prompt import search_query_prompt, search_rag_prompt, arxiv_search_prompt, arxiv_rag_prompt
 from src.modules.search import ai_search
 from src.components.sidebar import side_info
@@ -11,11 +11,14 @@ from src.database.sql_db import insert_study_data
 from src.database.vector_db import ingest_knowledge
 
 async def main():
-    st.title("📚 :blue-background[Researcher]:blue[.AI]")
+    st.title("📚 :blue[AI.]:blue-background[Researcher]")
     side_info()
+    init_session_state()
+    initialise_model()
+    initialise_tavily()
 
     if st.session_state.question is None:
-        search_type = st.radio("Search Type", ["Internet search", "ArXiv search"], horizontal=True)
+        search_type = st.radio("Search Type", ["Tavily", "ArXiv search"], horizontal=True)
         if search_type:
             st.session_state.search_type = search_type
         input_question = st.text_area(
@@ -33,7 +36,7 @@ async def main():
     
     if st.session_state.question and not st.session_state.search_results and not st.session_state.stream_response:
         with st.spinner("Searching for results..."):
-            if st.session_state.search_type == "Internet search":
+            if st.session_state.search_type == "Tavily":
                 # search_query = llm_generate(search_query_prompt(st.session_state.question))
                 search_results = ai_search(st.session_state.question)
                 if search_results["results"]:
@@ -56,7 +59,7 @@ async def main():
         else:
             display_search_result(st.session_state.search_results)
 
-    if st.session_state.search_type == "Internet search" and st.session_state.search_results and not st.session_state.stream_response:
+    if st.session_state.search_type == "Tavily" and st.session_state.search_results and not st.session_state.stream_response:
         with st.container(height=400, border=True):
             search_results = [result["content"][:300] for result in st.session_state.search_results["results"]]
             st.write_stream(llm_stream(search_rag_prompt(st.session_state.question, search_results)))
@@ -83,7 +86,7 @@ async def main():
 
     if st.session_state.title:
         with st.spinner("Saving study to BrainBox..."):
-            if st.session_state.search_type == "Internet search":
+            if st.session_state.search_type == "Tavily":
                 results = [ result["url"] for result in st.session_state.search_results["results"] ]
             else:
                 results = [ result["Link"] for result in st.session_state.search_results ]

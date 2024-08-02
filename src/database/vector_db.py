@@ -1,10 +1,9 @@
 import streamlit as st
 from tidb_vector.integrations import TiDBVectorClient
-from sentence_transformers import SentenceTransformer
 from langchain_community.document_loaders import ArxivLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import re, secrets, ast
+import re, secrets, requests
 
 DB_HOST = st.secrets["database"]["DB_HOST"]
 DB_PORT = st.secrets["database"]["DB_PORT"]
@@ -12,19 +11,22 @@ DB_USERNAME = st.secrets["database"]["DB_USERNAME"]
 DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
 DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
 
-MODEL_NAME = 'Alibaba-NLP/gte-large-en-v1.5'
-
-embedding_model = SentenceTransformer(MODEL_NAME, trust_remote_code=True)
-embedding_model_dim = embedding_model.get_sentence_embedding_dimension()
-
 def text_to_embedding(text):
-    embedding = embedding_model.encode(text)
-    return embedding.tolist()
+    JINAN_HEADERS = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {st.secrets["JINAAI_API_KEY"]}'
+    }
+    JINAAI_REQUEST_DATA = {
+        'input': [text],
+        'model': 'jina-embeddings-v2-base-en'
+    }
+    response = requests.post('https://api.jina.ai/v1/embeddings', headers=JINAN_HEADERS, json=JINAAI_REQUEST_DATA)
+    return response.json()['data'][0]['embedding']
 
 vector_store = TiDBVectorClient(
     table_name='knowledge',
     connection_string=f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca=/etc/ssl/cert.pem&ssl_verify_cert=true&ssl_verify_identity=true',
-    vector_dimension=embedding_model_dim,
+    vector_dimension=768,
     drop_existing_table=False,
 )
 
@@ -55,7 +57,7 @@ def extract_arxiv_id(url):
     return None
 
 def ingest_knowledge(id, results, type):
-    if type == "Internet search":
+    if type == "Tavily":
         docs = UnstructuredURLLoader(urls=results).load()
     else:
         docs = []
@@ -71,7 +73,13 @@ def ingest_knowledge(id, results, type):
 
 def vector_search(query, chat_ids):
     query_embedding = text_to_embedding(query)
-    search_results = vector_store.query(query_embedding,k=4)
+    search_results = vector_store.query(
+        query_embedding,
+        k=4,
+        filter={"id": {
+            "$in": chat_ids
+        }}
+    )
     results = []
     for item in search_results:
         results.append({
