@@ -5,10 +5,7 @@ from src.modules.prompt import followup_query_prompt, rag_prompt
 from src.components.sidebar import side_info
 from src.components.ui import display_chat_messages, followup_questions
 from src.database.vector_db import vector_search
-from src.modules.utils import init_session_state
-
-def handle_study_selection():
-    st.session_state.chat_ids = [study['id'] for study in st.session_state.studies if study['title'] in st.session_state.study_selection]
+from src.modules.utils import init_session_state, handle_study_selection
 
 async def main():
     st.title("💬 :blue[Chat]:blue-background[Box]")
@@ -63,4 +60,6 @@ async def main():
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Chat Box", page_icon="💬", layout="wide")
-    asyncio.run(main())
+    _, col, _ = st.columns([1, 8, 1])
+    with col:
+        asyncio.run(main())

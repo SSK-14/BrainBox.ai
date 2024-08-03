@@ -44,7 +44,25 @@ def fetch_arxiv_results(api_url):
         "Select": [False] * len(results),
         "Title": [result['title'] for result in results],
         "Summary": [result['summary'] for result in results],
-        "Published": [datetime.strptime(result['published'], "%Y-%m-%dT%H:%M:%SZ").strftime("%B %d, %Y") for result in results],
+        "Published": [datetime.strptime(result['published'], "%Y-%m-%dT%H:%M:%SZ").strftime("%d/%m/%Y") for result in results],
         "Authors": [', '.join(result['authors']) for result in results],
         "Link": [result['link'] for result in results]
     }
+
+def get_study_id(study_title):
+    study_id = None
+    for study in st.session_state.studies:
+        if study["title"] == study_title:
+            study_id = study["id"]
+            break
+    return study_id
+
+def study_already_exists(study_title):
+    for study in st.session_state.studies:
+        if study["title"] == study_title:
+            return True
+    return False
+
+
+def handle_study_selection():
+    st.session_state.chat_ids = [study['id'] for study in st.session_state.studies if study['title'] in st.session_state.study_selection]
