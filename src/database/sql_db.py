@@ -101,4 +101,18 @@ def fetch_all_studies():
     finally:
         connection.close()
 
+def delete_study(study_id):
+    delete_sql = "DELETE FROM studies WHERE id = %s"
+    connection = create_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(delete_sql, (study_id,))
+            connection.commit()
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        connection.rollback()
+    finally:
+        connection.close()
+
+
 create_table()

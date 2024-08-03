@@ -1,12 +1,14 @@
 import streamlit as st
+from src.database.vector_db import delete_knowledge
+from src.database.sql_db import delete_study
 import pandas as pd
 import json
 
 def example_questions():
     col1, col2 = st.columns(2)
     questions = [
-        "What are recent advancements in field of AI?",
-        "Recent researches in the field of lung cancer"
+        "What are recent advancements in field of AI ?",
+        "Recent researches in the field of lung cancer ?"
     ]
     if col1.button(questions[0], use_container_width=True):
         st.session_state.question = questions[0]
@@ -71,3 +73,17 @@ def view_studies(studies, title):
                 st.write(study['summary'])
             for link in study['results']:
                 st.write(link)
+
+@st.experimental_dialog("Delete Study")
+def delete_Study(study):
+    st.title(f":blue[{study['title']}]")
+    st.write("Are you sure you want to delete this study?")
+    col1, col2 = st.columns(2)
+    if col1.button("Yes sure", type="primary", use_container_width=True):
+        delete_knowledge(study["id"])
+        delete_study(study["id"])
+        st.toast("Study deleted successfully.")
+        st.session_state.studies.remove(study)
+        st.rerun()
+    if col2.button("Cancel", type="secondary", use_container_width=True):
+        st.rerun()

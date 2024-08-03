@@ -9,7 +9,12 @@ def main():
             <p>🤖📚 Your AI-powered research assistant that explores the internet 🌐 and research papers 📄 based on your rough idea search queries ✨</p>
         </div>
         """
-    st.components.v1.html(card_html, height=100, scrolling=False)
+    st.components.v1.html(card_html, height=85, scrolling=False)
+    col1, col2, col3 = st.columns(3)
+    col1.success("**Re-Search:** Utilize Tavily and arXiv APIs to find the most relevant research papers and articles based on your queries.", icon="🔍")
+    col2.info("**Knowledge Box:** Store all source results and articles in a vector space for quick and efficient retrieval.", icon="📚")
+    col3.warning("**AI Brain:** Use AI as your companion to answer questions, summarize findings, and highlight key points throughout your research.", icon="💡")
+    st.markdown("---")
     _, col1, col2, col3, _ = st.columns([2,1,1,1,2])
     col1.page_link("pages/1_💡_AI_Researcher.py", label="AI Researcher", icon="💡", use_container_width=True)
     col2.page_link("pages/2_📚_My_Studies.py", label="My Studies", icon="📚", use_container_width=True)

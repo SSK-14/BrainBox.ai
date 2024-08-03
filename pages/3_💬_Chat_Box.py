@@ -30,7 +30,11 @@ async def main():
             query = st.session_state.messages[-1]["content"]
             with st.spinner("Searching your knowledge base..."):
                 followup_query_asyncio = asyncio.create_task(llm_generate(followup_query_prompt(query)))
-                search_results = vector_search(query, st.session_state.chat_ids)
+                if st.session_state.chat_ids != []:
+                    filter = {"id": {"$in": st.session_state.chat_ids}}
+                else:
+                    filter = None
+                search_results = vector_search(query, filter)
                 context = [result["text"] for result in search_results] if search_results else []
                 prompt = rag_prompt(st.session_state.messages, context)
 

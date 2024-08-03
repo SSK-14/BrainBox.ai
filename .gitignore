@@ -6,6 +6,7 @@ share/
 audio/
 .vscode
 __pycache__/
+.tmp/
 env
 .env
 secrets.toml

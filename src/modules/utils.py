@@ -2,7 +2,6 @@ import streamlit as st
 from src.database.sql_db import fetch_all_studies
 import requests
 import xml.etree.ElementTree as ET
-import pandas as pd
 from datetime import datetime
 
 def init_session_state():
@@ -12,6 +11,8 @@ def init_session_state():
         "question": None,
         "deep_dive": False,
         "title": None,
+        "search_type": None,
+        "documents": [],
         "studies": fetch_all_studies(),
         "chat_ids": [],
         "messages": [{"role": "assistant", "content": "Hi. I'm BrainBox.AI your super-smart AI assistant. Ask me anything you are looking for from your studies 🪄."}],

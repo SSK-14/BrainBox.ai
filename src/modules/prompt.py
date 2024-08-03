@@ -31,25 +31,7 @@ def arxiv_search_prompt(search_query):
         {"role": "user", "content": user_prompt}
     ]
 
-def arxiv_rag_prompt(user_query, search_results):
-    system_prompt = f"""You are a BrainBox.AI an research expert that helps answering question.
-    SEARCH INFORMATION is below:
-    ---------------------
-    {search_results}
-    ---------------------
-    Rules: Only answer the user question, based only on SEARCH INFORMATION.
-    Response should include:
-    # <title based on user query>
-    ## Summary: <overall summary of papers>
-    ## Key points: <key points observed>
-    """
-    user_prompt = f"User question: ```{user_query}``` .\nAnswer in markdown: "
-    return [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt}
-    ]
-
-def search_rag_prompt(user_query, search_results):
+def rag_research_prompt(user_query, search_results):
     system_prompt = f"""You are a BrainBox.AI an search expert that helps answering question.
     SEARCH INFORMATION is below:
     ---------------------

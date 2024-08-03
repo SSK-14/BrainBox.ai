@@ -1,17 +1,19 @@
-import asyncio, json
+import asyncio
 import streamlit as st
 from src.components.sidebar import side_info
-from src.components.ui import view_studies
+from src.components.ui import view_studies, delete_Study
 from src.modules.utils import init_session_state
 
 
 def display_studies(study):
-    with st.container(border=True, height=72):
-        col1, col2, col3 = st.columns([3,1,1])
-        col1.subheader(f":blue[{study['title']}]")
-        if col2.button("View 📄", use_container_width=True):
+    with st.container(border=True, height=75):
+        col1, col2, col3, col4 = st.columns([4,1,1,1])
+        col1.markdown(f"### *:blue[{study['title']}]*")
+        if col2.button("Delete 🗑️", use_container_width=True, key=f"delete_{study['id']}"):
+            delete_Study(study)
+        if col3.button("View 📄", use_container_width=True, key=f"view_{study['id']}"):
             view_studies(study["study_data"], study["title"])
-        if col3.button(f"{ 'Remove' if study['id'] in st.session_state.chat_ids else 'Add'} 💬", use_container_width=True, key=f"add_{study['id']}", type="primary"):
+        if col4.button(f"{ 'Remove' if study['id'] in st.session_state.chat_ids else 'Add'} to 💬", use_container_width=True, key=f"add_{study['id']}", type="primary"):
             if study["id"] in st.session_state.chat_ids:
                 st.session_state.chat_ids.remove(study["id"])
             else:
