@@ -13,7 +13,7 @@ from src.database.vector_db import ingest_knowledge, ingest_document, document_s
 
 
 async def main():
-    st.title("📚 :blue[AI.]:blue-background[Researcher]")
+    st.title("📚 :orange[AI.Researcher]")
     side_info()
     init_session_state()
     initialise_model()
@@ -42,9 +42,9 @@ async def main():
 
     if st.session_state.title:
         if isinstance(st.session_state.title, dict):
-            st.header(f":blue[{st.session_state.title['title']}]")
+            st.header(f":orange[{st.session_state.title['title']}]")
         else:
-            st.header(f":blue[{st.session_state.title}]")
+            st.header(f":orange[{st.session_state.title}]")
 
     if st.session_state.question is None and st.session_state.title:
         search_type = st.radio("Search Type", ["Tavily", "ArXiv", "Documents"], horizontal=True)

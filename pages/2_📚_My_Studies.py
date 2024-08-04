@@ -8,12 +8,12 @@ from src.modules.utils import init_session_state
 def display_studies(study):
     with st.container(border=True, height=75):
         col1, col2, col3, col4 = st.columns([4,1,1,1])
-        col1.markdown(f"### *:blue[{study['title']}]*")
+        col1.markdown(f"### *:orange[{study['title']}]*")
         if col2.button("Delete 🗑️", use_container_width=True, key=f"delete_{study['id']}"):
             delete_Study(study)
-        if col3.button("View 📄", use_container_width=True, key=f"view_{study['id']}"):
+        if col4.button("View 📄", use_container_width=True, key=f"view_{study['id']}", type="primary"):
             view_studies(study["study_data"], study["title"])
-        if col4.button(f"{ 'Remove' if study['id'] in st.session_state.chat_ids else 'Add'} to 💬", use_container_width=True, key=f"add_{study['id']}", type="primary"):
+        if col3.button(f"{ 'Remove' if study['id'] in st.session_state.chat_ids else 'Add'} to 💬", use_container_width=True, key=f"add_{study['id']}"):
             if study["id"] in st.session_state.chat_ids:
                 st.session_state.chat_ids.remove(study["id"])
             else:
@@ -21,7 +21,7 @@ def display_studies(study):
             st.rerun()
 
 async def main():
-    st.title("📚 :blue[My.]:blue-background[Studies]")
+    st.title("📚 :orange[My.Studies]")
     side_info()
     init_session_state()
     st.markdown("---")

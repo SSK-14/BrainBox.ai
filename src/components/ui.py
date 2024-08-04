@@ -63,7 +63,7 @@ def followup_questions():
 @st.dialog("Study Details", width="large")
 def view_studies(studies, title):
     studies = json.loads(studies)
-    st.title(f":blue[{title}]")
+    st.title(f":orange[{title}]")
     tab_list = [f"{idx+1} | {study['type']}" for idx, study in enumerate(studies)]
     tabs = st.tabs(tab_list)
     for tab, study in zip(tabs, studies):
@@ -75,7 +75,7 @@ def view_studies(studies, title):
 
 @st.dialog("Delete Study")
 def delete_Study(study):
-    st.title(f":blue[{study['title']}]")
+    st.title(f":orange[{study['title']}]")
     st.write("Are you sure you want to delete this study?")
     col1, col2 = st.columns(2)
     if col1.button("Yes sure", type="primary", use_container_width=True):

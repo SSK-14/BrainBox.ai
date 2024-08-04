@@ -13,5 +13,7 @@ def side_info():
                 help="You can get your API key from https://app.tavily.com/home",
                 key="tavily_api_key"
             ) 
-        st.components.v1.html("", height=310, scrolling=False)
+        st.components.v1.html("", height=320, scrolling=False)
         st.image("src/assets/logo.png", use_column_width=True)
+        # st.image("src/assets/search.png")
+        st.link_button("🔗 Source Code", "https://github.com/SSK-14/", use_container_width=True)

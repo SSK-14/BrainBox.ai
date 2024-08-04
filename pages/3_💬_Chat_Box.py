@@ -9,7 +9,7 @@ from src.components.ui import display_chat_messages, followup_questions, display
 from src.database.vector_db import vector_search
 
 async def main():
-    st.title("💬 :blue[Chat]:blue-background[Box]")
+    st.title("💬 :orange[ChatBox]")
     side_info()
     init_session_state()
     initialise_model()
