@@ -5,7 +5,7 @@ from src.modules.prompt import followup_query_prompt, rag_prompt
 from src.modules.observability import start_trace, end_trace, add_feedback
 from src.modules.utils import init_session_state, handle_study_selection, clear_chat_history
 from src.components.sidebar import side_info
-from src.components.ui import display_chat_messages, followup_questions
+from src.components.ui import display_chat_messages, followup_questions, display_chat_results
 from src.database.vector_db import vector_search
 
 async def main():
@@ -43,8 +43,8 @@ async def main():
                 prompt = rag_prompt(st.session_state.messages, context)
 
             if search_results:
-                with st.expander("Search Results", expanded=False):
-                    st.json(search_results, expanded=False)
+                with st.expander("Source Results", expanded=False):
+                    display_chat_results(search_results)
 
             if followup_query_asyncio:
                 followup_query = await followup_query_asyncio

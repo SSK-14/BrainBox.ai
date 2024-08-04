@@ -23,6 +23,16 @@ def display_chat_messages(messages):
         with st.chat_message(message["role"], avatar=icons[message["role"]]):
             st.markdown(message["content"])
 
+def display_chat_results(results):
+    tab_list = [
+        f"{idx + 1} | {str(result['metadata'].get('source', result['metadata'].get('Title', 'No Title')))}"
+        for idx, result in enumerate(results)
+    ]
+    tabs = st.tabs(tab_list)
+    for tab, result in zip(tabs, results):
+        with tab:
+            st.caption(result["text"])
+
 def display_search_result(results):
     results_df = pd.DataFrame(results)
     edited_result = st.data_editor(

@@ -118,7 +118,7 @@ async def main():
             st.write_stream(llm_stream(rag_research_prompt(st.session_state.question, search_results), "Summary", st.session_state.trace_id))
             st.rerun()
 
-    if st.session_state.stream_response:
+    if  st.session_state.question and st.session_state.stream_response:
         end_trace(st.session_state.stream_response, metadata={"type": st.session_state.search_type})
         with st.container(height=400, border=True):
             st.write(st.session_state.stream_response)
