@@ -7,6 +7,7 @@ DB_PORT = st.secrets["database"]["DB_PORT"]
 DB_USERNAME = st.secrets["database"]["DB_USERNAME"]
 DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
 DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
+SSL_PATH = st.secrets["database"]["SSL_PATH"]
 
 def create_connection():
     return pymysql.connect(
@@ -17,7 +18,7 @@ def create_connection():
         database=DB_DATABASE,
         ssl_verify_cert=True,
         ssl_verify_identity=True,
-        ssl_ca="/etc/ssl/cert.pem"
+        ssl_ca=SSL_PATH
     )
 
 def create_table():

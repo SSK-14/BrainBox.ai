@@ -12,6 +12,7 @@ DB_PORT = st.secrets["database"]["DB_PORT"]
 DB_USERNAME = st.secrets["database"]["DB_USERNAME"]
 DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
 DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
+SSL_PATH = st.secrets["database"]["SSL_PATH"]
 
 text_embeddings = JinaEmbeddings(
     jina_api_key=st.secrets["JINAAI_API_KEY"], 
@@ -20,7 +21,7 @@ text_embeddings = JinaEmbeddings(
 
 vector_store = TiDBVectorClient(
     table_name='knowledge',
-    connection_string=f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca=/etc/ssl/cert.pem&ssl_verify_cert=true&ssl_verify_identity=true',
+    connection_string=f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca={SSL_PATH}&ssl_verify_cert=true&ssl_verify_identity=true',
     vector_dimension=768,
     drop_existing_table=False,
 )
