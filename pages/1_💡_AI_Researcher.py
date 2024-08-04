@@ -17,7 +17,6 @@ async def main():
     side_info()
     init_session_state()
     initialise_model()
-    initialise_tavily()
 
     if st.session_state.title is None:
         col1, col2 = st.columns(2)   
@@ -47,9 +46,12 @@ async def main():
             st.header(f":orange[{st.session_state.title}]")
 
     if st.session_state.question is None and st.session_state.title:
-        search_type = st.radio("Search Type", ["Tavily", "ArXiv", "Documents"], horizontal=True)
+        search_type = st.radio("Search Type", ["ArXiv", "Tavily", "Documents"], horizontal=True)
         if search_type:
             st.session_state.search_type = search_type
+
+        if st.session_state.search_type == "Tavily":
+            initialise_tavily()
 
         if st.session_state.search_type == "Documents" and st.session_state.documents == []:
             uploaded_files = st.file_uploader("Upload PDF files", accept_multiple_files=True, type="pdf")
