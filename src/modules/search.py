@@ -11,5 +11,13 @@ def initialise_tavily():
         st.stop()
     st.session_state.tavily_client = TavilyClient(api_key=tavily_api_key)
 
-def ai_search(query, images=False, num_results=4):
-    return st.session_state.tavily_client.search(query, search_depth="advanced", include_images=images, max_results=num_results)
+def ai_search(query, images=False, num_results=10):
+    search_result =  st.session_state.tavily_client.search(query, search_depth="advanced", include_images=images, max_results=num_results)
+    results = search_result['results']
+    return {
+        "Select": [False] * len(results),
+        "Title": [result['title'] for result in results],
+        "Summary": [result['content'] for result in results],
+        "Score": [result['score'] for result in results],
+        "Link": [result['url'] for result in results]
+    }

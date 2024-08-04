@@ -2,10 +2,11 @@ import asyncio, json
 import streamlit as st
 from src.modules.model import llm_stream, llm_generate, initialise_model
 from src.modules.prompt import followup_query_prompt, rag_prompt
+from src.modules.observability import start_trace, end_trace, add_feedback
+from src.modules.utils import init_session_state, handle_study_selection, clear_chat_history
 from src.components.sidebar import side_info
 from src.components.ui import display_chat_messages, followup_questions
 from src.database.vector_db import vector_search
-from src.modules.utils import init_session_state, handle_study_selection
 
 async def main():
     st.title("💬 :blue[Chat]:blue-background[Box]")
@@ -22,19 +23,22 @@ async def main():
         on_change=handle_study_selection
     )
 
-    with st.container(height=640, border=False):
+    with st.container(height=600, border=False):
         display_chat_messages(st.session_state.messages)
             
         search_results = None
         if st.session_state.messages[-1]["role"] != "assistant":
             query = st.session_state.messages[-1]["content"]
+            trace = start_trace("ChatBox", query)
             with st.spinner("Searching your knowledge base..."):
-                followup_query_asyncio = asyncio.create_task(llm_generate(followup_query_prompt(query)))
+                retrieval = trace.span(name="Retrieval", metadata={"filter": st.session_state.chat_ids}, input=query)
+                followup_query_asyncio = asyncio.create_task(llm_generate(followup_query_prompt(query), "Follow up question", trace.id))
                 if st.session_state.chat_ids != []:
                     filter = {"id": {"$in": st.session_state.chat_ids}}
                 else:
                     filter = None
                 search_results = vector_search(query, filter)
+                retrieval.end(output=search_results)   
                 context = [result["text"] for result in search_results] if search_results else []
                 prompt = rag_prompt(st.session_state.messages, context)
 
@@ -52,10 +56,18 @@ async def main():
                         st.session_state.followup_query = []
 
             with st.chat_message("assistant", avatar="🧠"):
-                st.write_stream(llm_stream(prompt))
+                st.write_stream(llm_stream(prompt, "Answer", trace.id))
+                end_trace(st.session_state.stream_response)
                 st.session_state.messages.append({"role": "assistant", "content": st.session_state.stream_response})
-                if len(st.session_state.messages) > 1:
-                    followup_questions()
+            
+        if len(st.session_state.messages) > 1:
+            col1, _, col2 = st.columns([1, 4, 1])
+            col1.button('New Chat', on_click=clear_chat_history)
+            with col2:
+                feedback = st.feedback(options="faces")
+                if feedback:
+                    add_feedback(feedback)
+            followup_questions()
 
     if query := st.chat_input("Enter your search query here..."):
         st.session_state.messages.append({"role": "user", "content": query})

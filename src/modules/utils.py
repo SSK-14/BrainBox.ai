@@ -10,6 +10,7 @@ def init_session_state():
         "search_results": None,
         "question": None,
         "deep_dive": False,
+        "trace_id": None,
         "title": None,
         "search_type": None,
         "documents": [],
@@ -21,6 +22,19 @@ def init_session_state():
     for key, value in state_defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
+def refresh():
+    st.session_state.search_results = None
+    st.session_state.stream_response = None
+    st.session_state.question = None
+    st.session_state.title = None
+    st.session_state.deep_dive = False
+    st.session_state.documents = []
+    st.session_state.trace_id = None
+    st.rerun()
+
+def clear_chat_history():
+    st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm WizSearch your super-smart AI assistant. Ask me anything you are looking for 🪄."}]
 
 def fetch_arxiv_results(api_url):
     response = requests.get(api_url)
@@ -40,7 +54,6 @@ def fetch_arxiv_results(api_url):
             'link': link,
             'published': published
         })
-
     return {
         "Select": [False] * len(results),
         "Title": [result['title'] for result in results],
