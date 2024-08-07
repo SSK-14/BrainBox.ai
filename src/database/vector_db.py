@@ -5,7 +5,7 @@ from langchain_community.document_loaders import ArxivLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import re, secrets, os
+import re, secrets, os, requests
 
 DB_HOST = st.secrets["database"]["DB_HOST"]
 DB_PORT = st.secrets["database"]["DB_PORT"]
@@ -18,6 +18,26 @@ text_embeddings = JinaEmbeddings(
     jina_api_key=st.secrets["JINAAI_API_KEY"], 
     model_name="jina-embeddings-v2-base-en"
 )
+
+def re_ranking(query, search_results, top_k=4):
+    url = 'https://api.jina.ai/v1/rerank'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f"Bearer {st.secrets['JINAAI_API_KEY']}" 
+    }
+    data = {
+        "model": "jina-reranker-v2-base-multilingual",
+        "query": query,
+        "top_n": top_k,
+        "documents": [result["text"] for result in search_results]
+    }
+    response = requests.post(url, headers=headers, json=data)
+    result = response.json()["results"]
+    re_ranked_results = []
+    for item in result:
+        index = item["index"]
+        re_ranked_results.append(search_results[index])
+    return re_ranked_results
 
 vector_store = TiDBVectorClient(
     table_name='knowledge',
@@ -85,7 +105,7 @@ def ingest_document(uploaded_files):
     insert_embedding(documents, doc_vector_store)
 
 def document_search(query):
-    return vector_search(query, None, doc_vector_store)
+    return vector_search(query, None, 4, doc_vector_store)
 
 def ingest_knowledge(id, results, type):
     if type == "Tavily":
@@ -111,17 +131,22 @@ def ingest_knowledge(id, results, type):
 def delete_knowledge(id):
     vector_store.delete(filter={"id": {"$eq": id}})
 
-def vector_search(query, filter=None, vector_store=vector_store):
+def vector_search(query, filter=None, top_k=4, vector_store=vector_store, re_rank=False):
     query_embedding = text_embeddings.embed_query(query)
     search_results = vector_store.query(
         query_embedding,
-        k=4,
+        k= 2*top_k if re_rank else top_k,
         filter=filter
     )
     results = []
     for item in search_results:
-        results.append({
-            "text": item.document,
-            "metadata": item.metadata
-        })
+        if item.distance < 0.8:
+            results.append({
+                "text": item.document,
+                "metadata": item.metadata
+            })
+    if len(results) == 0:
+        return None
+    if re_rank:
+        return re_ranking(query, results, top_k)
     return results

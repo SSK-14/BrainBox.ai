@@ -126,7 +126,7 @@ async def main():
             st.write(st.session_state.stream_response)
         col1, col2, _ = st.columns([1, 1, 3])
         if col1.button("Save to 🧠🍱", type="primary", use_container_width=True):
-            with st.spinner("Saving study to BrainBox..."):
+            with st.spinner("Saving study to BrainBox. Please wait may take some time... 🕰️"):
                 if st.session_state.search_type == "Documents":
                     results = st.session_state.documents
                 else:

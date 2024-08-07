@@ -1,7 +1,9 @@
 import streamlit as st
 from src.database.vector_db import delete_knowledge
 from src.database.sql_db import delete_study
+from src.modules.utils import get_study_title
 import pandas as pd
+from collections import defaultdict
 import json
 
 def example_questions():
@@ -24,14 +26,25 @@ def display_chat_messages(messages):
             st.markdown(message["content"])
 
 def display_chat_results(results):
-    tab_list = [
-        f"{idx + 1} | {str(result['metadata'].get('source', result['metadata'].get('Title', 'No Title')))}"
-        for idx, result in enumerate(results)
-    ]
-    tabs = st.tabs(tab_list)
-    for tab, result in zip(tabs, results):
-        with tab:
-            st.caption(result["text"])
+    if len(results) > 0:
+        merged_results = defaultdict(lambda: {"texts": [], "sources": set()})
+        for result in results:
+            metadata_id = result['metadata']['id']
+            merged_results[metadata_id]["texts"].append(result['text'])
+            merged_results[metadata_id]["sources"].add(result['metadata'].get('source'))
+
+        col1, col2 = st.columns(2)
+        id = 0
+        for key, value in merged_results.items():
+            title = get_study_title(key)
+            if id % 2 == 0:
+                if col1.button(f"{title}", key=f"result_{title}", use_container_width=True):
+                    view_result_studies(title, value)
+            else:
+                if col2.button(f"{title}", key=f"result_{title}", use_container_width=True):
+                    view_result_studies(title, value)
+            id += 1
+
 
 def display_search_result(results):
     results_df = pd.DataFrame(results)
@@ -59,6 +72,15 @@ def followup_questions():
                 st.session_state.messages.append({"role": "user", "content": selected_followup_query})
                 st.session_state.followup_query = []
                 st.rerun()
+
+@st.dialog("Result sources")
+def view_result_studies(title, value):
+    st.title(f":orange[{title}]")
+    for source in value["sources"]:
+        st.caption(source)
+    with st.container(height=280):
+        for text in value["texts"]:
+            st.caption(text.replace("\n", " "))
 
 @st.dialog("Study Details", width="large")
 def view_studies(studies, title):

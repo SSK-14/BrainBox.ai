@@ -1,4 +1,4 @@
-import json, time
+import time
 
 def search_query_prompt(user_query):
     current_date = time.strftime("%Y-%m-%d")
@@ -73,9 +73,8 @@ def followup_query_prompt(query):
 
 
 def rag_prompt(history=None, context=None):
-    system_message = {
-        "role": "system",
-        "content": f"""You are a BrainBox.AI, a Q/A expert that helps answer questions.
+    if len(context) > 0:
+        context = f"""
         CONTEXT is below:
         ---------------------
         {context}
@@ -84,6 +83,17 @@ def rag_prompt(history=None, context=None):
         1. Only answer the USER QUESTION.
         2. Do not hallucinate only use CONTEXT.
         3. Respond in markdown format."""
+    else:
+        context = """
+        RULES:
+        1. Answer the user question grounded and only if you are confident.
+        2. Respond in markdown format.
+        """
+
+    system_message = {
+        "role": "system",
+        "content": f"""You are a BrainBox.AI, a Q/A expert that helps answer questions.
+        {context}"""
     }
     
     prompt = [system_message]

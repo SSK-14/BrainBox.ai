@@ -26,8 +26,8 @@ async def main():
     with st.container(height=600, border=False):
         display_chat_messages(st.session_state.messages)
             
-        search_results = None
         if st.session_state.messages[-1]["role"] != "assistant":
+            st.session_state.chat_search_results = None
             query = st.session_state.messages[-1]["content"]
             trace = start_trace("ChatBox", query)
             with st.spinner("Searching your knowledge base..."):
@@ -37,14 +37,10 @@ async def main():
                     filter = {"id": {"$in": st.session_state.chat_ids}}
                 else:
                     filter = None
-                search_results = vector_search(query, filter)
-                retrieval.end(output=search_results)   
-                context = [result["text"] for result in search_results] if search_results else []
+                st.session_state.chat_search_results = vector_search(query, filter, re_rank=True)
+                retrieval.end(output=st.session_state.chat_search_results)
+                context = [result["text"] for result in st.session_state.chat_search_results] if st.session_state.chat_search_results else None
                 prompt = rag_prompt(st.session_state.messages, context)
-
-            if search_results:
-                with st.expander("Source Results", expanded=False):
-                    display_chat_results(search_results)
 
             if followup_query_asyncio:
                 followup_query = await followup_query_asyncio
@@ -59,7 +55,11 @@ async def main():
                 st.write_stream(llm_stream(prompt, "Answer", trace.id))
                 end_trace(st.session_state.stream_response)
                 st.session_state.messages.append({"role": "assistant", "content": st.session_state.stream_response})
-            
+        
+        if st.session_state.chat_search_results:
+            with st.expander("Source Results", expanded=False):
+                display_chat_results(st.session_state.chat_search_results)   
+        
         if len(st.session_state.messages) > 1:
             col1, _, col2 = st.columns([1, 4, 1])
             col1.button('New Chat', on_click=clear_chat_history)

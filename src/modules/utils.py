@@ -8,6 +8,7 @@ def init_session_state():
     state_defaults = {
         "stream_response": None,
         "search_results": None,
+        "chat_search_results": None,
         "question": None,
         "deep_dive": False,
         "trace_id": None,
@@ -70,6 +71,14 @@ def get_study_id(study_title):
             study_id = study["id"]
             break
     return study_id
+
+def get_study_title(study_id):
+    study_title = None
+    for study in st.session_state.studies:
+        if study["id"] == study_id:
+            study_title = study["title"]
+            break
+    return study_title
 
 def study_already_exists(study_title):
     for study in st.session_state.studies:
