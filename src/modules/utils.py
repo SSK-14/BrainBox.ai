@@ -9,6 +9,7 @@ def init_session_state():
         "stream_response": None,
         "search_results": None,
         "chat_search_results": None,
+        "feedback": None,
         "question": None,
         "deep_dive": False,
         "trace_id": None,

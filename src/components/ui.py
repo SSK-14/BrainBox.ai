@@ -32,7 +32,6 @@ def display_chat_results(results):
             metadata_id = result['metadata']['id']
             merged_results[metadata_id]["texts"].append(result['text'])
             merged_results[metadata_id]["sources"].add(result['metadata'].get('source'))
-
         col1, col2 = st.columns(2)
         id = 0
         for key, value in merged_results.items():
@@ -77,7 +76,8 @@ def followup_questions():
 def view_result_studies(title, value):
     st.title(f":orange[{title}]")
     for source in value["sources"]:
-        st.caption(source)
+        if source:
+            st.caption(source)
     with st.container(height=280):
         for text in value["texts"]:
             st.caption(text.replace("\n", " "))

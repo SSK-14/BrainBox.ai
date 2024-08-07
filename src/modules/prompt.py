@@ -1,4 +1,4 @@
-import time
+import time, json
 
 def search_query_prompt(user_query):
     current_date = time.strftime("%Y-%m-%d")
@@ -71,9 +71,42 @@ def followup_query_prompt(query):
         } 
     ]
 
+def rag_check_prompt(user_query, search_results):
+    system_prompt = f"""You have to check if the search information is relevant to the user query.
+    Reply only "yes" if relevant and "no" if not relevant.
+    SEARCH INFORMATION is below:
+    ---------------------
+    {search_results}
+    ---------------------
+    Reply "no" if query is greeting, thank you, or not a question.
+    """
+    user_prompt = f"User question: ```{user_query}``` .\nAnswer yes/no:"
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
+def standalone_query_prompt(query=None, history=None):
+    history = history[:-1]
+    return [ 
+        {"role": "system", "content": f"""Role: Standalone Question Creator.
+            TASK: Create a standalone question based on the conversation that can be used to search.
+            If the new question itself is a standalone question, then return the same question.                        
+            Conversation History:
+            ---------------------
+            {json.dumps(history)}
+            ---------------------
+            RULES:
+            1. Do not answer the question, only create a standalone question.
+            2. Include key information/words in the question.\n"""
+        },
+        {"role": "user", "content": f"User query: {query}\n"
+            f"Standalone question:"
+        }
+    ]
 
 def rag_prompt(history=None, context=None):
-    if len(context) > 0:
+    if context and len(context) > 0:
         context = f"""
         CONTEXT is below:
         ---------------------

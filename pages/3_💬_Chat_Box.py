@@ -1,7 +1,7 @@
 import asyncio, json
 import streamlit as st
 from src.modules.model import llm_stream, llm_generate, initialise_model
-from src.modules.prompt import followup_query_prompt, rag_prompt
+from src.modules.prompt import followup_query_prompt, rag_prompt, rag_check_prompt, standalone_query_prompt
 from src.modules.observability import start_trace, end_trace, add_feedback
 from src.modules.utils import init_session_state, handle_study_selection, clear_chat_history
 from src.components.sidebar import side_info
@@ -23,21 +23,28 @@ async def main():
         on_change=handle_study_selection
     )
 
-    with st.container(height=600, border=False):
+    with st.container(height=640, border=False):
         display_chat_messages(st.session_state.messages)
             
         if st.session_state.messages[-1]["role"] != "assistant":
             st.session_state.chat_search_results = None
+            st.session_state.followup_query = None
+            st.session_state.feedback = None
             query = st.session_state.messages[-1]["content"]
             trace = start_trace("ChatBox", query)
             with st.spinner("Searching your knowledge base..."):
                 retrieval = trace.span(name="Retrieval", metadata={"filter": st.session_state.chat_ids}, input=query)
+                if len(st.session_state.messages) > 2:
+                    query = await llm_generate(standalone_query_prompt(query, st.session_state.messages), "Standalone Question", trace.id)
                 followup_query_asyncio = asyncio.create_task(llm_generate(followup_query_prompt(query), "Follow up question", trace.id))
                 if st.session_state.chat_ids != []:
                     filter = {"id": {"$in": st.session_state.chat_ids}}
                 else:
                     filter = None
                 st.session_state.chat_search_results = vector_search(query, filter, re_rank=True)
+                source_check = await llm_generate(rag_check_prompt(query, st.session_state.chat_search_results), "RAG Check", trace.id)
+                if "no" in source_check.lower():
+                    st.session_state.chat_search_results = None
                 retrieval.end(output=st.session_state.chat_search_results)
                 context = [result["text"] for result in st.session_state.chat_search_results] if st.session_state.chat_search_results else None
                 prompt = rag_prompt(st.session_state.messages, context)
@@ -57,16 +64,16 @@ async def main():
                 st.session_state.messages.append({"role": "assistant", "content": st.session_state.stream_response})
         
         if st.session_state.chat_search_results:
-            with st.expander("Source Results", expanded=False):
-                display_chat_results(st.session_state.chat_search_results)   
+            display_chat_results(st.session_state.chat_search_results)   
         
         if len(st.session_state.messages) > 1:
-            col1, _, col2 = st.columns([1, 4, 1])
+            col1, _, col2 = st.columns([1, 3, 1])
             col1.button('New Chat', on_click=clear_chat_history)
             with col2:
-                feedback = st.feedback(options="faces")
-                if feedback:
-                    add_feedback(feedback)
+                if st.session_state.feedback is None:
+                    st.session_state.feedback = st.feedback(options="faces")
+                    if st.session_state.feedback:
+                        add_feedback(st.session_state.feedback)
             followup_questions()
 
     if query := st.chat_input("Enter your search query here..."):
@@ -75,7 +82,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Chat Box", page_icon="💬", layout="wide")
-    _, col, _ = st.columns([1, 8, 1])
-    with col:
-        asyncio.run(main())
+    st.set_page_config(page_title="Chat Box", page_icon="💬")
+    asyncio.run(main())
