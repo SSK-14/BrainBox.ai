@@ -2,9 +2,10 @@ import streamlit as st
 from langfuse.openai import OpenAI
 
 model_options = {
-    "Falcon 180B": "tiiuae/falcon-180b-chat",
-    "Falcon 11B": "tiiuae/falcon-11b",
+    "GPT-4o mini": "gpt-4o-mini",
+    "GPT-4o": "gpt-4o",
 }
+model_base_url = "https://api.openai.com/v1"
 
 def initialise_model():
     if "llm" not in st.session_state:
@@ -17,12 +18,12 @@ def initialise_model():
         st.stop()
     st.session_state.llm = OpenAI(
         api_key=st.session_state.model_api_token,
-        base_url="https://api.ai71.ai/v1/",
+        base_url=model_base_url,
     )
 
 async def llm_generate(prompt, name="AI Generate", trace_id=None):
     completion = st.session_state.llm.chat.completions.create(
-        model=model_options[st.session_state.model_name] or "tiiuae/falcon-180b-chat", 
+        model=model_options[st.session_state.model_name] or "gpt-4o-mini", 
         messages=prompt,
         name=name,
         trace_id=trace_id,
@@ -32,7 +33,7 @@ async def llm_generate(prompt, name="AI Generate", trace_id=None):
 def llm_stream(prompt, name="AI Stream", trace_id=None):
     st.session_state.stream_response = ""
     stream = st.session_state.llm.chat.completions.create(
-        model=model_options[st.session_state.model_name] or "tiiuae/falcon-180b-chat", 
+        model=model_options[st.session_state.model_name] or "gpt-4o-mini",
         messages=prompt,
         stream=True,
         name=name,
