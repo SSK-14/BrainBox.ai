@@ -1,11 +1,11 @@
 import streamlit as st
 from tidb_vector.integrations import TiDBVectorClient
-from langchain_community.embeddings import JinaEmbeddings
+from src.modules.model import text_embedding, re_ranking
 from langchain_community.document_loaders import ArxivLoader
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import re, secrets, os, requests
+import re, secrets, os
 
 DB_HOST = st.secrets["database"]["DB_HOST"]
 DB_PORT = st.secrets["database"]["DB_PORT"]
@@ -14,41 +14,18 @@ DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
 DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
 SSL_PATH = st.secrets["database"]["SSL_PATH"]
 
-text_embeddings = JinaEmbeddings(
-    jina_api_key=st.secrets["JINAAI_API_KEY"], 
-    model_name="jina-embeddings-v2-base-en"
-)
-
-def re_ranking(query, search_results, top_k=4):
-    url = 'https://api.jina.ai/v1/rerank'
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f"Bearer {st.secrets['JINAAI_API_KEY']}" 
-    }
-    data = {
-        "model": "jina-reranker-v2-base-multilingual",
-        "query": query,
-        "top_n": top_k,
-        "documents": [result["text"] for result in search_results]
-    }
-    response = requests.post(url, headers=headers, json=data)
-    result = response.json()["results"]
-    re_ranked_results = []
-    for item in result:
-        index = item["index"]
-        re_ranked_results.append(search_results[index])
-    return re_ranked_results
+CONNECTION_STRING = f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca={SSL_PATH}&ssl_verify_cert=true&ssl_verify_identity=true'
 
 vector_store = TiDBVectorClient(
     table_name='knowledge',
-    connection_string=f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca={SSL_PATH}&ssl_verify_cert=true&ssl_verify_identity=true',
+    connection_string=CONNECTION_STRING,
     vector_dimension=768,
     drop_existing_table=False,
 )
 
 doc_vector_store = TiDBVectorClient(
     table_name='documents',
-    connection_string=f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca=/etc/ssl/cert.pem&ssl_verify_cert=true&ssl_verify_identity=true',
+    connection_string=CONNECTION_STRING,
     vector_dimension=768,
     drop_existing_table=True,
 )
@@ -60,7 +37,6 @@ def init_temp_folder():
         os.remove(f".tmp/{file}")   
 
 init_temp_folder()
-
 
 def insert_embedding(documents, vector_store=vector_store):
     vector_store.insert(
@@ -75,7 +51,7 @@ def create_embedding(docs, id=None):
     for doc in docs:
         if id:
             doc.metadata["id"] = id
-        embedding = text_embeddings.embed_query(doc.page_content)
+        embedding = text_embedding(doc.page_content)
         documents.append({
             "text": doc.page_content,
             "embedding": embedding,
@@ -132,7 +108,7 @@ def delete_knowledge(id):
     vector_store.delete(filter={"id": {"$eq": id}})
 
 def vector_search(query, filter=None, top_k=4, vector_store=vector_store, re_rank=False):
-    query_embedding = text_embeddings.embed_query(query)
+    query_embedding = text_embedding(query)
     search_results = vector_store.query(
         query_embedding,
         k= 2*top_k if re_rank else top_k,

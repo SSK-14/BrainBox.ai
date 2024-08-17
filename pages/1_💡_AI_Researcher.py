@@ -2,9 +2,9 @@ import asyncio
 import streamlit as st
 from src.modules.model import initialise_model, llm_stream, llm_generate
 from src.modules.search import initialise_tavily
-from src.modules.utils import fetch_arxiv_results, init_session_state, get_study_id, study_already_exists, refresh
+from src.modules.utils import init_session_state, get_study_id, study_already_exists, refresh
 from src.modules.prompt import search_query_prompt, rag_research_prompt, arxiv_search_prompt
-from src.modules.search import ai_search
+from src.modules.search import ai_search, fetch_arxiv_results
 from src.modules.observability import start_trace, end_trace
 from src.components.sidebar import side_info
 from src.components.ui import example_questions, display_search_result
