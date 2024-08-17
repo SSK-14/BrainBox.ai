@@ -1,6 +1,11 @@
 import streamlit as st
 from langfuse.openai import OpenAI
+import requests, json
 
+if "JINAAI_API_KEY" not in st.secrets:
+    st.warning('Please provide JinaAI API key in secrets.', icon="⚠️")
+    st.stop()
+    
 if "MODEL_NAME" in st.secrets:
     model_name = st.secrets["MODEL_NAME"]
 else:
@@ -48,3 +53,39 @@ def llm_stream(prompt, name="AI Stream", trace_id=None):
     for chunk in stream:
         st.session_state.stream_response += str(chunk.choices[0].delta.content or "")
         yield str(chunk.choices[0].delta.content or "")
+
+def re_ranking(query, search_results, top_k=4):
+    url = 'https://api.jina.ai/v1/rerank'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f"Bearer {st.secrets['JINAAI_API_KEY']}" 
+    }
+    data = {
+        "model": "jina-reranker-v2-base-multilingual",
+        "query": query,
+        "top_n": top_k,
+        "documents": [result["text"] for result in search_results]
+    }
+    response = requests.post(url, headers=headers, json=data)
+    result = response.json()["results"]
+    re_ranked_results = []
+    for item in result:
+        index = item["index"]
+        re_ranked_results.append(search_results[index])
+    return re_ranked_results
+
+def text_embedding(text):
+    url = 'https://api.jina.ai/v1/embeddings'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f"Bearer {st.secrets['JINAAI_API_KEY']}"
+    }
+    data = {
+        "model": "jina-embeddings-v2-base-en",
+        "normalized": True,
+        "embedding_type": "float",
+        "input": [text]
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    embedding = response.json()["data"][0]["embedding"]
+    return embedding
