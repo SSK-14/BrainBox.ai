@@ -1,5 +1,4 @@
 import streamlit as st
-from src.modules.model import model_options
 
 def side_info():
     with st.sidebar:
@@ -20,7 +19,6 @@ def side_info():
                 help="You can get your API key from https://app.tavily.com/home",
                 key="tavily_api_key"
             )
-        st.selectbox("Select a model", list(model_options.keys()), key="model_name")
         st.components.v1.html("", height=240, scrolling=False)
         st.image("src/assets/logo.png", use_column_width=True)
         # st.image("src/assets/search.png")

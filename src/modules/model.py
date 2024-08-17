@@ -1,11 +1,17 @@
 import streamlit as st
 from langfuse.openai import OpenAI
 
-model_options = {
-    "GPT-4o mini": "gpt-4o-mini",
-    "GPT-4o": "gpt-4o",
-}
-model_base_url = "https://api.openai.com/v1"
+if "MODEL_NAME" in st.secrets:
+    model_name = st.secrets["MODEL_NAME"]
+else:
+    st.warning('Please provide Model name in secrets.', icon="⚠️")
+    st.stop()
+
+if "MODEL_BASE_URL" in st.secrets:
+    model_base_url = st.secrets["MODEL_BASE_URL"]
+else:
+    st.warning('Please provide Model base url in secrets.', icon="⚠️")
+    st.stop()
 
 def initialise_model():
     if "llm" not in st.session_state:
@@ -23,7 +29,7 @@ def initialise_model():
 
 async def llm_generate(prompt, name="AI Generate", trace_id=None):
     completion = st.session_state.llm.chat.completions.create(
-        model=model_options[st.session_state.model_name] or "gpt-4o-mini", 
+        model=model_name, 
         messages=prompt,
         name=name,
         trace_id=trace_id,
@@ -33,7 +39,7 @@ async def llm_generate(prompt, name="AI Generate", trace_id=None):
 def llm_stream(prompt, name="AI Stream", trace_id=None):
     st.session_state.stream_response = ""
     stream = st.session_state.llm.chat.completions.create(
-        model=model_options[st.session_state.model_name] or "gpt-4o-mini",
+        model=model_name,
         messages=prompt,
         stream=True,
         name=name,
