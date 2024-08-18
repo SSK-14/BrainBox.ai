@@ -6,15 +6,7 @@ from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import re, secrets, os
-
-DB_HOST = st.secrets["database"]["DB_HOST"]
-DB_PORT = st.secrets["database"]["DB_PORT"]
-DB_USERNAME = st.secrets["database"]["DB_USERNAME"]
-DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
-DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
-SSL_PATH = st.secrets["database"]["SSL_PATH"]
-
-CONNECTION_STRING = f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}?ssl_ca={SSL_PATH}&ssl_verify_cert=true&ssl_verify_identity=true'
+from src.database.main import CONNECTION_STRING
 
 vector_store = TiDBVectorClient(
     table_name='knowledge',

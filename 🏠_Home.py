@@ -14,6 +14,7 @@ def main():
     col1.page_link("pages/1_💡_AI_Researcher.py", label="AI Researcher", icon="💡", use_container_width=True)
     col2.page_link("pages/2_📚_My_Studies.py", label="My Studies", icon="📚", use_container_width=True)
     col3.page_link("pages/3_💬_Chat_Box.py", label="Chat Box", icon="💬", use_container_width=True)
+    st.markdown("---")
     col1, col2, col3 = st.columns(3)
     col1.success("**Re-Search:** Utilize Tavily and arXiv APIs to find the most relevant research papers and articles based on your queries.", icon="🔍")
     col2.info("**Knowledge Box:** Store all source results and articles in a vector space for quick and efficient retrieval.", icon="📚")

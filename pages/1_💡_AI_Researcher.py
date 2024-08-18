@@ -8,8 +8,8 @@ from src.modules.search import ai_search, fetch_arxiv_results
 from src.modules.observability import start_trace, end_trace
 from src.components.sidebar import side_info
 from src.components.ui import example_questions, display_search_result
-from src.database.sql_db import insert_study_data, update_study_data
-from src.database.vector_db import ingest_knowledge, ingest_document, document_search
+from src.database.study import insert_study_data, update_study_data
+from src.database.knowledge import ingest_knowledge, ingest_document, document_search
 
 
 async def main():
@@ -20,10 +20,11 @@ async def main():
 
     if st.session_state.title is None:
         col1, col2 = st.columns(2)   
-        title = col1.text_input("Create new study ✍🏻", placeholder="Type here...")
+        title = col1.text_input("Create new study ✍🏻", placeholder="Enter new study name...")
         selected_study = col2.selectbox(
-            "Add to existing study 🗝️",
+            "Add to existing study 📖",
             [study['title'] for study in st.session_state.studies],
+            placeholder="Select study from existing...",
             index=None,
         )
         if title.strip() != "" or selected_study:

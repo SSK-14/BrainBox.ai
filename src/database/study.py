@@ -1,27 +1,8 @@
 import streamlit as st
-import pymysql
-import json
+import pymysql, json
+from src.database.main import create_connection
 
-DB_HOST = st.secrets["database"]["DB_HOST"]
-DB_PORT = st.secrets["database"]["DB_PORT"]
-DB_USERNAME = st.secrets["database"]["DB_USERNAME"]
-DB_PASSWORD = st.secrets["database"]["DB_PASSWORD"]
-DB_DATABASE = st.secrets["database"]["DB_DATABASE"]
-SSL_PATH = st.secrets["database"]["SSL_PATH"]
-
-def create_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USERNAME,
-        password=DB_PASSWORD,
-        database=DB_DATABASE,
-        ssl_verify_cert=True,
-        ssl_verify_identity=True,
-        ssl_ca=SSL_PATH
-    )
-
-def create_table():
+def create_study_table():
     create_table_sql = """
     CREATE TABLE IF NOT EXISTS studies (
         id INT PRIMARY KEY AUTO_INCREMENT,
@@ -36,6 +17,8 @@ def create_table():
             connection.commit()
     finally:
         connection.close()
+
+create_study_table()
 
 def insert_study_data(data):
     insert_sql = """
@@ -114,6 +97,3 @@ def delete_study(study_id):
         connection.rollback()
     finally:
         connection.close()
-
-
-create_table()

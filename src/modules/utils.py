@@ -1,5 +1,5 @@
 import streamlit as st
-from src.database.sql_db import fetch_all_studies
+from src.database.study import fetch_all_studies
 
 def init_session_state():
     state_defaults = {
@@ -10,6 +10,7 @@ def init_session_state():
         "question": None,
         "deep_dive": False,
         "trace_id": None,
+        "cache_key": None,
         "title": None,
         "search_type": None,
         "documents": [],
@@ -33,6 +34,10 @@ def refresh():
     st.rerun()
 
 def clear_chat_history():
+    st.session_state.chat_search_results = None
+    st.session_state.followup_query = None
+    st.session_state.feedback = None
+    st.session_state.question = None
     st.session_state.messages = [{"role": "assistant", "content": "Hi. I'm WizSearch your super-smart AI assistant. Ask me anything you are looking for 🪄."}]
 
 def get_study_id(study_title):
